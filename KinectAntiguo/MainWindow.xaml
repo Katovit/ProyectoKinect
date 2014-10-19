@@ -66,7 +66,6 @@
             <StatusBarItem Padding="0 0 0 10">
                 <TextBlock Name="statusBarText" Margin="-1 0 0 0">Click 'Seated' to change skeletal pipeline type!</TextBlock>
             </StatusBarItem>
-        </StatusBar>
-        <Label x:Name="solucionP" Content="Kinect Status Change" HorizontalAlignment="Right" FontSize="20" Margin="0,2,252,6" Width="227" Grid.Row="2" Grid.RowSpan="2"></Label>
+        </StatusBar>       
     </Grid>
 </Window>

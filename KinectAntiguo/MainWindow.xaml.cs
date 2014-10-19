@@ -33,13 +33,6 @@ namespace Microsoft.Samples.Kinect.SkeletonBasics
         //Variables necesarias para tener los puntos
 
         puntosMovimiento cadera, rodillaIzquierda, rodillaDerecha, pieIzquierdo, pieDerecho;
-        const int numeroPostura = 10;
-        int cont = 0;
-
-        //Obtención si la postura es correcta o incorrecta.
-        posturas posturaInicial = posturas.Mal;
-        posturas posturaDetectada = posturas.Mal;
-
         /// <summary>
         /// Width of output drawing
         /// </summary>
@@ -269,59 +262,7 @@ namespace Microsoft.Samples.Kinect.SkeletonBasics
                 this.drawingGroup.ClipGeometry = new RectangleGeometry(new Rect(0.0, 0.0, RenderWidth, RenderHeight));
             }
             obtenerPuntos(skeletons);
-            
         }
-
-        private void posturaCorrecta(puntosMovimiento cadera, puntosMovimiento rodillaIzquierda, puntosMovimiento rodillaDerecha)
-        {
-            if (esCorrecta(cadera, rodillaIzquierda, rodillaDerecha))
-            {
-                if (deteccionDePostura(posturas.PosturaCorrecta))
-                {
-                    solucionP.Content = posturaInicial.ToString();
-                }
-            }
-            else
-            {
-                if (deteccionDePostura(posturas.Mal))
-                {
-                    solucionP.Content = posturaInicial.ToString();
-                }
-            }
-        }
-
-        public bool deteccionDePostura(posturas posturaActual)
-        {
-            if (posturaDetectada != posturaActual)
-            {
-                cont = 0;
-                posturaDetectada = posturaActual;
-                return false;
-            }
-            if (cont < numeroPostura)
-            {
-                cont++;
-                return false;
-            }
-            if (posturaActual != posturaInicial)
-            {
-                cont = 0;
-                posturaInicial = posturaActual;
-                return true;
-            }
-            else
-                cont = 0;
-            return false;
-        }
-        public bool esCorrecta(puntosMovimiento cadera, puntosMovimiento rodillaIzquierda, puntosMovimiento rodillaDerecha)
-        {
-            /*if (System.Math.Abs(elbowR.y - handR.y) > 0.04f && System.Math.Abs(elbowR.y - shoulderR.y) > 0.04f && System.Math.Abs(handR.y - shoulderR.y) > 0.04f)
-            {
-                return false;
-            }*/
-            return true;
-        }
-
         private void obtenerPuntos(Skeleton[] skeletons)
         {
             foreach (Skeleton bones in skeletons)
@@ -359,7 +300,6 @@ namespace Microsoft.Samples.Kinect.SkeletonBasics
                     pieDerecho.Z = bones.Joints[JointType.FootRight].Position.Z;
                 }
             }
-            posturaCorrecta(cadera, rodillaIzquierda, rodillaDerecha);
         }
         /// <summary>
         /// Draws a skeleton's bones and joints

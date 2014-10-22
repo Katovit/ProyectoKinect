@@ -315,10 +315,10 @@ namespace Microsoft.Samples.Kinect.SkeletonBasics
         }
         public bool esCorrecta(puntosMovimiento cadera, puntosMovimiento rodillaIzquierda, puntosMovimiento rodillaDerecha)
         {
-            if(System.Math.Abs(cadera.Y - rodillaIzquierda.Y) > 0.04f && System.Math.Abs(cadera.Y - rodillaDerecha.Y) > 0.04f)
+            /*if (System.Math.Abs(elbowR.y - handR.y) > 0.04f && System.Math.Abs(elbowR.y - shoulderR.y) > 0.04f && System.Math.Abs(handR.y - shoulderR.y) > 0.04f)
             {
                 return false;
-            }
+            }*/
             return true;
         }
 
@@ -333,7 +333,6 @@ namespace Microsoft.Samples.Kinect.SkeletonBasics
                     cadera.X = bones.Joints[JointType.HipCenter].Position.X;
                     cadera.Y = bones.Joints[JointType.HipCenter].Position.Y;
                     cadera.Z = bones.Joints[JointType.HipCenter].Position.Z;
-                    
 
                     //Puntos de la rodilla izquierda.
                     rodillaIzquierda = new puntosMovimiento();

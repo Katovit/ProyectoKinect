@@ -17,6 +17,14 @@ namespace Microsoft.Samples.Kinect.SkeletonBasics
         public float Y;
         public float Z;
     };
+    public struct puntosIniciales
+    {
+        public puntosMovimiento puntosRodillaIzq;
+        public puntosMovimiento puntosRodillaDere;
+        public puntosMovimiento puntosCadera;
+        public puntosMovimiento puntosTobilloIzq;
+        public puntosMovimiento puntosTobilloDere;
+    };
 
     public enum posturas
     {
@@ -34,6 +42,12 @@ namespace Microsoft.Samples.Kinect.SkeletonBasics
         //Variables necesarias para tener los puntos
 
         puntosMovimiento cadera, rodillaIzquierda, rodillaDerecha, tobilloIzquierdo, tobilloDerecho;
+        puntosMovimiento rodillaInicialDerecha = new puntosMovimiento();
+        puntosMovimiento rodillaInicialIzquierda = new puntosMovimiento();
+        puntosMovimiento caderaInicial = new puntosMovimiento();
+        puntosMovimiento tobillaInicialDerecho = new puntosMovimiento();
+        puntosMovimiento tobillaInicialIzquierdo = new puntosMovimiento();
+        //puntosIniciales inicioPosturas = new puntosIniciales();
         const int numeroPostura = 10;
         int cont = 0;
         bool posicionInicialCorrecta = false;
@@ -43,6 +57,7 @@ namespace Microsoft.Samples.Kinect.SkeletonBasics
         posturas posturaBajando = posturas.SigueBajando;
         posturas posturaBien = posturas.Agachado;
         posturas posturaDetectada = posturas.Mal;
+        
 
         /// <summary>
         /// Width of output drawing
@@ -275,45 +290,45 @@ namespace Microsoft.Samples.Kinect.SkeletonBasics
             obtenerPuntos(skeletons);
             
         }
-        //Calcula la distancia segumn sean puntos positivos o negativos.
-
-        /*bool piernasSuelo(puntosMovimiento pieIzquierdo, puntosMovimiento pieDerecho)
-        {
-            float distancia = System.Math.Abs(pieDerecho.Y - pieIzquierdo.Y);
-            if (distancia < 0.15)
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-        }*/
-
+//Compruebo si es un la postura correcta.
         private void posturaCorrecta(puntosMovimiento cadera, puntosMovimiento rodillaIzquierda, puntosMovimiento rodillaDerecha, puntosMovimiento tobilloDerecho, puntosMovimiento tobilloIzquierdo)
         {
-            
-            if (detectoRecto(cadera, rodillaIzquierda, rodillaDerecha, tobilloDerecho, tobilloIzquierdo))
+            if (detectoRecto(cadera, rodillaIzquierda, rodillaDerecha, tobilloDerecho, tobilloIzquierdo))//Compruebo la postura inicial si es correcta.
             {
                 if (deteccionDePostura(posturas.InicialPostura))
                 {
                     solucionP.Content = posturaInicial.ToString();
                     posicionInicialCorrecta = true;
+                    //Guardo las cadera en la posicion correcta.         
+                    caderaInicial.X = cadera.X;
+                    caderaInicial.Y = cadera.Y;
+                    caderaInicial.Z = cadera.Z;
+                    //Guardo la rodilla derecha en la posicion correcta
+                    rodillaInicialDerecha.X = rodillaDerecha.X;
+                    rodillaInicialDerecha.Y = rodillaDerecha.Y;
+                    rodillaInicialDerecha.Z = rodillaDerecha.Z;
+                    //Guardo la rodilla izquierda en la posición correcta
+                    rodillaInicialIzquierda.X = rodillaIzquierda.X;
+                    rodillaInicialIzquierda.Y = rodillaIzquierda.Y;
+                    rodillaInicialIzquierda.Z = rodillaIzquierda.Z;
+                    //Guardo el tobillo derecho en la posición correcta.
+                    tobillaInicialDerecho.X = tobilloDerecho.X;
+                    tobillaInicialDerecho.Y = tobilloDerecho.Y;
+                    tobillaInicialDerecho.Z = tobilloDerecho.Z;
+                    //Guardo el tobillo izquierdo en la posición correcta.
+                    tobillaInicialIzquierdo.X = tobilloIzquierdo.X;
+                    tobillaInicialIzquierdo.Y = tobilloIzquierdo.Y;
+                    tobillaInicialIzquierdo.Z = tobilloIzquierdo.Z;    
                 }
             }
             else
             {
                 if(posicionInicialCorrecta)
                 {
-                    solucionP.Content = "Cadera :" + cadera.X + " " + cadera.Y + " " + cadera.Z +
-                        "\n rodillaIzquierda :" + rodillaIzquierda.X + " " + rodillaIzquierda.Y + " " + rodillaIzquierda.Z +
-                        "\n rodillaDerecha :" + rodillaDerecha.X + " " + rodillaDerecha.Y + " " + rodillaDerecha.Z;
-                    //System.Console.WriteLine("tobilloDerecho :" + tobilloDerecho.X + tobilloDerecho.Y + tobilloDerecho.Z);
-                    //System.Console.WriteLine("tobilloIzquierdo :" + tobilloIzquierdo.X + tobilloIzquierdo.Y + tobilloIzquierdo.Z);
-                    /*if(detectoBajando(cadera, rodillaDerecha, rodillaIzquierda, tobilloDerecho, tobilloIzquierdo)
+                    if (detectoBajando(cadera, rodillaIzquierda, rodillaDerecha, tobilloDerecho, tobilloIzquierdo))
                     {
                         solucionP.Content = posturaBajando.ToString();
-                    }*/
+                    }
                     /*if(posturaFinal(cadera, rodillaDerecha, rodillaIzquierda, tobilloDerecho, tobilloIzquierdo)
                     {
                         solucionP.Content = posturaCorrecta.ToString();
@@ -325,15 +340,21 @@ namespace Microsoft.Samples.Kinect.SkeletonBasics
                 }
             }
         }
-        /*public bool detectoBajando(puntosMovimiento cadera, puntosMovimiento rodillaIzquierda, puntosMovimiento rodillaDerecha, puntosMovimiento tobilloIzquierdo, puntosMovimiento tobilloDerecho)
+        public bool detectoBajando(puntosMovimiento cadera, puntosMovimiento rodillaIzquierda, puntosMovimiento rodillaDerecha, puntosMovimiento tobilloDerecho, puntosMovimiento tobilloIzquierdo)
         {
-            if((cadera.Z - rodillaIzquierda) )
-            if ((rodillaIzquierda.Z - tobilloIzquierdo.Z) - (cadera.Z - rodillaIzquierda.Z) > 0.03f && (rodillaDerecha.Z - tobilloDerecho.Z) - (cadera.Z - rodillaDerecha.Z) > 0.03f)
+            //solucionP.Content = "Inicio rodilla " + rodillaInicialDerecha.Z + "\nRodilla Derecha " + rodillaDerecha.Z;
+            if ((rodillaInicialDerecha.Z > rodillaDerecha.Z+0.2) && (rodillaInicialDerecha.Z > rodillaIzquierda.Z + 0.2))
             {
                 return true;
             }
+            /*else if ((rodillaInicialDerecha.Z < rodillaDerecha.Z) && (rodillaInicialDerecha.Z < rodillaIzquierda.Z))
+            {
+                posicionInicialCorrecta = false;
+                solucionP.Content = posturaDetectada.ToString();
+                return false;
+            }*/
             return false;
-        }*/
+        }
 
         public bool deteccionDePostura(posturas posturaActual)
         {
@@ -368,7 +389,7 @@ namespace Microsoft.Samples.Kinect.SkeletonBasics
         }*/
         bool detectoRecto(puntosMovimiento cadera, puntosMovimiento rodillaIzquierda, puntosMovimiento rodillaDerecha, puntosMovimiento tobilloIzquierdo, puntosMovimiento tobilloDerecho)
         {
-            if ((rodillaIzquierda.Z - tobilloIzquierdo.Z) - (cadera.Z - rodillaIzquierda.Z) > 0.03f && (rodillaDerecha.Z - tobilloDerecho.Z) - (cadera.Z - rodillaDerecha.Z) > 0.03f)
+            if ((rodillaIzquierda.Z - tobilloIzquierdo.Z) - (cadera.Z - rodillaIzquierda.Z) > 0.01f && (rodillaDerecha.Z - tobilloDerecho.Z) - (cadera.Z - rodillaDerecha.Z) > 0.01f)
             {
                 return true;
             }
@@ -412,6 +433,7 @@ namespace Microsoft.Samples.Kinect.SkeletonBasics
                     tobilloDerecho.X = bones.Joints[JointType.AnkleRight].Position.X;
                     tobilloDerecho.Y = bones.Joints[JointType.AnkleRight].Position.Y;
                     tobilloDerecho.Z = bones.Joints[JointType.AnkleRight].Position.Z;
+                    
                 }
             }
            /* posicioninicio = detectoRecto(cadera, rodillaIzquierda, rodillaDerecha);

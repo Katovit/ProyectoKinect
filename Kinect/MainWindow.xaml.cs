@@ -17,14 +17,14 @@ namespace Microsoft.Samples.Kinect.SkeletonBasics
         public float Y;
         public float Z;
     };
-    public struct puntosIniciales
+    /*public struct puntosIniciales
     {
         public puntosMovimiento puntosRodillaIzq;
         public puntosMovimiento puntosRodillaDere;
         public puntosMovimiento puntosCadera;
         public puntosMovimiento puntosTobilloIzq;
         public puntosMovimiento puntosTobilloDere;
-    };
+    };*/
 
     public enum posturas
     {
@@ -39,8 +39,7 @@ namespace Microsoft.Samples.Kinect.SkeletonBasics
     /// </summary>
     public partial class MainWindow : Window
     {
-        //Variables necesarias para tener los puntos
-
+        //Variables donde almaceno toda la información requerida para calcular las posiciones necesarias.
         puntosMovimiento cadera, rodillaIzquierda, rodillaDerecha, tobilloIzquierdo, tobilloDerecho;
         puntosMovimiento rodillaInicialDerecha = new puntosMovimiento();
         puntosMovimiento rodillaInicialIzquierda = new puntosMovimiento();
@@ -49,6 +48,7 @@ namespace Microsoft.Samples.Kinect.SkeletonBasics
         puntosMovimiento tobillaInicialIzquierdo = new puntosMovimiento();
         puntosMovimiento rodillaIzquierdaActualizada = new puntosMovimiento();
         puntosMovimiento rodillaDerechaActualizada = new puntosMovimiento();
+        //Variable para saber si ha finalizado el movimiento.
         bool finalizado = false;
         //puntosIniciales inicioPosturas = new puntosIniciales();
         const int numeroPostura = 10;
@@ -107,6 +107,17 @@ namespace Microsoft.Samples.Kinect.SkeletonBasics
         /// Pen used for drawing bones that are currently tracked
         /// </summary>
         private readonly Pen trackedBonePen = new Pen(Brushes.Green, 6);
+
+
+        //Pinta en color Chocolate si esta en posicion Inicial.
+        private readonly Pen pintaHuesosInicial = new Pen(Brushes.Chocolate, 8);
+        //pinta en color Verde si esta en la posicion final.
+        private readonly Pen pintaHuesosFinal = new Pen(Brushes.Green , 8);
+        //Pinta en color turquesa si esta llegando a la posicion final.
+        private readonly Pen pintaHuesosLlegando = new Pen(Brushes.Turquoise, 8);
+        //Pinta en rojo si esta haciendo un movimiento incorrecto.
+        private readonly Pen pintaHuesosMal = new Pen(Brushes.Red, 8);
+
 
         /// <summary>
         /// Pen used for drawing bones that are currently inferred
@@ -294,10 +305,12 @@ namespace Microsoft.Samples.Kinect.SkeletonBasics
             obtenerPuntos(skeletons);
             
         }
-//Compruebo si es un la postura correcta.
+        //Compruebo si es un la postura correcta.
         private void posturaCorrecta(puntosMovimiento cadera, puntosMovimiento rodillaIzquierda, puntosMovimiento rodillaDerecha, puntosMovimiento tobilloDerecho, puntosMovimiento tobilloIzquierdo)
         {
-            if (detectoRecto(cadera, rodillaIzquierda, rodillaDerecha, tobilloDerecho, tobilloIzquierdo))//Compruebo la postura inicial si es correcta.
+            //Compruebo la postura inicial es con las piernas rectas.
+            //Si entro en este primer If, lo que ontengo es que el usuario esta en la posición correcta y almacenado de referencia esa postura.
+            if (detectoRecto(cadera, rodillaIzquierda, rodillaDerecha, tobilloDerecho, tobilloIzquierdo))
             {
                 if (deteccionDePostura(posturas.Postura_Inicial))
                 {
@@ -324,26 +337,25 @@ namespace Microsoft.Samples.Kinect.SkeletonBasics
                     tobillaInicialIzquierdo.Y = tobilloIzquierdo.Y;
                     tobillaInicialIzquierdo.Z = tobilloIzquierdo.Z;    
                 }
-            }
+            }//Si ya esta almacenada la posicion correcta o esta mal entra aqui.
             else
             {
-                if(posicionInicialCorrecta)
+                if(posicionInicialCorrecta)//Si ha partido de la posición correcta.
                 {
-                    if(detectaSubida(rodillaDerecha, rodillaIzquierda) && !finalizado)
+                    if(detectaSubida(rodillaDerecha, rodillaIzquierda) && !finalizado)//Compruebo que el usuario no suba de la posicion inicial que hemos guardado anteriormente.
                     {
-                        solucionP.Content = "No suba";
-                        //posicionInicialCorrecta = false;
+                        solucionP.Content = "No suba";//Mensaje por pantalla para que el usuario no suba.
                     }
-                    if(detectoPosicionFinal(rodillaDerecha, rodillaIzquierda))
+                    if(detectoPosicionFinal(rodillaDerecha, rodillaIzquierda))//Compruebo que el usuario ha llegado a la posición final.
                     {
-                        finalizado = true;
+                        finalizado = true;//Guardo que ha finalizado.
                         solucionP.Content = posturaBien.ToString();
                     }
-                    if (detectoBajando(cadera, rodillaIzquierda, rodillaDerecha, tobilloDerecho, tobilloIzquierdo) && !finalizado)
+                    if (detectoBajando(cadera, rodillaIzquierda, rodillaDerecha, tobilloDerecho, tobilloIzquierdo) && !finalizado)//Compruebo que no se esta bajando y no ha llegado a la posición final.
                     {
                         solucionP.Content = posturaBajando.ToString();
                     }
-                    if (noHayMovimiento(rodillaDerecha, rodillaIzquierda) && !finalizado)
+                    if (noHayMovimiento(rodillaDerecha, rodillaIzquierda) && !finalizado)//Compruebo que no hay ningun movimiento por un lapso de tiempo.
                     {
                         solucionP.Content = posturaVuelta.ToString();
                     }
@@ -354,10 +366,12 @@ namespace Microsoft.Samples.Kinect.SkeletonBasics
                 }
             }
         }
+        //Comprobación de que en un lapso de tiempo el usuario no ha realizado ningun movimiento.
         public bool noHayMovimiento(puntosMovimiento rodillaDerecha, puntosMovimiento rodillaIzquierda)
         {
             return false;
         }
+        //Método comprobación de si se ha llegado a la posición final comparando desde la posición inicial hasta la actual.
         public bool detectoPosicionFinal(puntosMovimiento rodillaDerecha, puntosMovimiento rodillaIzquierda)
         {
             if (rodillaIzquierda.Z < rodillaInicialIzquierda.Z - 0.25 && rodillaDerecha.Z < rodillaInicialIzquierda.Z - 0.25)
@@ -366,7 +380,7 @@ namespace Microsoft.Samples.Kinect.SkeletonBasics
             }
             return false;
         }
-
+        //Método comprobación de si el usuario esta realizando una subida en el movimiento en vez de bajar.
         public bool detectaSubida(puntosMovimiento rodillaDerecha, puntosMovimiento rodillaIzquierda)
         {
             if (rodillaIzquierda.Z < rodillaIzquierdaActualizada.Z + 0.1 && rodillaDerecha.Z < rodillaDerechaActualizada.Z + 0.1)
@@ -375,6 +389,7 @@ namespace Microsoft.Samples.Kinect.SkeletonBasics
             }
             return false;
         }
+        //Método comprobación de si el usuario esta bajando y actualizado la posición actual para que el usuario no suba hasta terminar el ejercicio.
         public bool detectoBajando(puntosMovimiento cadera, puntosMovimiento rodillaIzquierda, puntosMovimiento rodillaDerecha, puntosMovimiento tobilloDerecho, puntosMovimiento tobilloIzquierdo)
         {
             //solucionP.Content = "Inicio rodilla " + rodillaInicialDerecha.Z + "\nRodilla Derecha " + rodillaDerecha.Z;
@@ -386,7 +401,7 @@ namespace Microsoft.Samples.Kinect.SkeletonBasics
             }
             return false;
         }
-
+        //Método de detección de la postura actual.
         public bool deteccionDePostura(posturas posturaActual)
         {
             if (posturaDetectada != posturaActual)
@@ -410,6 +425,7 @@ namespace Microsoft.Samples.Kinect.SkeletonBasics
                 cont = 0;
             return false;
         }
+        //Método que comprueba si se parte de la posición donde el usuario este completamente recto, es decir con una abertura de unos 10 cm entre los dos pies.
         bool detectoRecto(puntosMovimiento cadera, puntosMovimiento rodillaIzquierda, puntosMovimiento rodillaDerecha, puntosMovimiento tobilloIzquierdo, puntosMovimiento tobilloDerecho)
         {
             if ((rodillaIzquierda.Z - tobilloIzquierdo.Z) - (cadera.Z - rodillaIzquierda.Z) > 0.01f && (rodillaDerecha.Z - tobilloDerecho.Z) - (cadera.Z - rodillaDerecha.Z) > 0.01f)
@@ -418,7 +434,7 @@ namespace Microsoft.Samples.Kinect.SkeletonBasics
             }
             return false;
         }
-    
+        //Método obtener puntos para almacenarlos y poderlos utilizar para calcular la postura inicial, final, intermedia o mal.
         private void obtenerPuntos(Skeleton[] skeletons)
         {
             //bool posicioninicio = false;
@@ -459,13 +475,9 @@ namespace Microsoft.Samples.Kinect.SkeletonBasics
                     
                 }
             }
-           /* posicioninicio = detectoRecto(cadera, rodillaIzquierda, rodillaDerecha);
-            if (posicioninicio)
-            {
-                solucionP.Content = "Postura Correcta";
-            }*/
             posturaCorrecta(cadera, rodillaIzquierda, rodillaDerecha, tobilloIzquierdo, tobilloDerecho);
         }
+
         /// <summary>
         /// Draws a skeleton's bones and joints
         /// </summary>
@@ -501,7 +513,9 @@ namespace Microsoft.Samples.Kinect.SkeletonBasics
             this.DrawBone(skeleton, drawingContext, JointType.HipRight, JointType.KneeRight);
             this.DrawBone(skeleton, drawingContext, JointType.KneeRight, JointType.AnkleRight);
             this.DrawBone(skeleton, drawingContext, JointType.AnkleRight, JointType.FootRight);
- 
+            
+
+            
             // Render Joints
             foreach (Joint joint in skeleton.Joints)
             {
@@ -591,35 +605,5 @@ namespace Microsoft.Samples.Kinect.SkeletonBasics
                 }
             }
         }
-        /*float calcularDistancia(float a, float b)
-        {
-            float sol = 0.0f;
-
-            if (a * b > 0.0)
-            {
-                sol = System.Math.Abs(a - b);
-            }
-            else
-            {
-                sol = System.Math.Abs(a) + System.Math.Abs(b);
-            }
-            return sol;
-        }
-        //Calculo direccion de movimiento
-        int calculoDireccion(float a, float b)
-        {
-            if (b > a)
-            {
-                return 1;
-            }
-            else if (b < a)
-            {
-                return -1;
-            }
-            else
-            {
-                return 0;
-            }
-        }*/
     }
 }

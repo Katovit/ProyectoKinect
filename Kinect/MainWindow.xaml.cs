@@ -17,14 +17,6 @@ namespace Microsoft.Samples.Kinect.SkeletonBasics
         public float Y;
         public float Z;
     };
-    /*public struct puntosIniciales
-    {
-        public puntosMovimiento puntosRodillaIzq;
-        public puntosMovimiento puntosRodillaDere;
-        public puntosMovimiento puntosCadera;
-        public puntosMovimiento puntosTobilloIzq;
-        public puntosMovimiento puntosTobilloDere;
-    };*/
 
     public enum posturas
     {
@@ -48,8 +40,12 @@ namespace Microsoft.Samples.Kinect.SkeletonBasics
         puntosMovimiento tobillaInicialIzquierdo = new puntosMovimiento();
         puntosMovimiento rodillaIzquierdaActualizada = new puntosMovimiento();
         puntosMovimiento rodillaDerechaActualizada = new puntosMovimiento();
+        puntosMovimiento caderaActualizada = new puntosMovimiento();
         //Variable para saber si ha finalizado el movimiento.
         bool finalizado = false;
+        bool correcto = false;
+        bool baja = false;
+        bool error = false;
         //puntosIniciales inicioPosturas = new puntosIniciales();
         const int numeroPostura = 10;
         int cont = 0;
@@ -110,7 +106,7 @@ namespace Microsoft.Samples.Kinect.SkeletonBasics
 
 
         //Pinta en color Chocolate si esta en posicion Inicial.
-        private readonly Pen pintaHuesosInicial = new Pen(Brushes.Chocolate, 8);
+        private readonly Pen pintaHuesosInicial = new Pen(Brushes.Azure, 8);
         //pinta en color Verde si esta en la posicion final.
         private readonly Pen pintaHuesosFinal = new Pen(Brushes.Green , 8);
         //Pinta en color turquesa si esta llegando a la posicion final.
@@ -314,11 +310,12 @@ namespace Microsoft.Samples.Kinect.SkeletonBasics
             {
                 if (deteccionDePostura(posturas.Postura_Inicial))
                 {
+                    finalizado = false;
                     solucionP.Content = posturaInicial.ToString();
                     posicionInicialCorrecta = true;
                     //Guardo las cadera en la posicion correcta.         
                     caderaInicial.X = cadera.X;
-                    caderaInicial.Y = cadera.Y;
+                    caderaActualizada.Y = caderaInicial.Y = cadera.Y;
                     caderaInicial.Z = cadera.Z;
                     //Guardo la rodilla derecha en la posicion correcta
                     rodillaInicialDerecha.X = rodillaDerecha.X;
@@ -342,65 +339,66 @@ namespace Microsoft.Samples.Kinect.SkeletonBasics
             {
                 if(posicionInicialCorrecta)//Si ha partido de la posición correcta.
                 {
-                    if(detectaSubida(rodillaDerecha, rodillaIzquierda) && !finalizado)//Compruebo que el usuario no suba de la posicion inicial que hemos guardado anteriormente.
-                    {
-                        solucionP.Content = "No suba";//Mensaje por pantalla para que el usuario no suba.
-                    }
-                    if(detectoPosicionFinal(rodillaDerecha, rodillaIzquierda))//Compruebo que el usuario ha llegado a la posición final.
+                    if (detectoPosicionFinal(cadera, caderaActualizada, rodillaInicialDerecha))//Compruebo que el usuario ha llegado a la posición final.
                     {
                         finalizado = true;//Guardo que ha finalizado.
                         solucionP.Content = posturaBien.ToString();
+                        correcto = true;
+                        baja = false;
                     }
-                    if (detectoBajando(cadera, rodillaIzquierda, rodillaDerecha, tobilloDerecho, tobilloIzquierdo) && !finalizado)//Compruebo que no se esta bajando y no ha llegado a la posición final.
+                    else if (detectoBajando(cadera, caderaActualizada) && !finalizado)//Compruebo que no se esta bajando y no ha llegado a la posición final.
                     {
                         solucionP.Content = posturaBajando.ToString();
+                        baja = true;
+                        correcto = false;
                     }
-                    if (noHayMovimiento(rodillaDerecha, rodillaIzquierda) && !finalizado)//Compruebo que no hay ningun movimiento por un lapso de tiempo.
+                    else if(detectaSubida(cadera, caderaActualizada))//Compruebo que el usuario no suba de la posicion inicial que hemos guardado anteriormente.
                     {
-                        solucionP.Content = posturaVuelta.ToString();
+                        solucionP.Content = "Vuelva a Empezar";//Mensaje por pantalla para que el usuario no suba.
+                        posicionInicialCorrecta = false;
+                        
                     }
                 }
                 else if (deteccionDePostura(posturas.Mal))
                 {
-                    solucionP.Content = posturaInicial.ToString();
+                    solucionP.Content = "Coloquese en la posición de inicio";
+                    baja = false;
+                    correcto = false;
                 }
             }
         }
-        //Comprobación de que en un lapso de tiempo el usuario no ha realizado ningun movimiento.
-        public bool noHayMovimiento(puntosMovimiento rodillaDerecha, puntosMovimiento rodillaIzquierda)
+
+        public bool detectoPosicionFinal(puntosMovimiento cadera, puntosMovimiento rodillaInicialDerecha, puntosMovimiento caderaActualizada)
         {
-            return false;
-        }
-        //Método comprobación de si se ha llegado a la posición final comparando desde la posición inicial hasta la actual.
-        public bool detectoPosicionFinal(puntosMovimiento rodillaDerecha, puntosMovimiento rodillaIzquierda)
-        {
-            if (rodillaIzquierda.Z < rodillaInicialIzquierda.Z - 0.25 && rodillaDerecha.Z < rodillaInicialIzquierda.Z - 0.25)
+            if(caderaInicial.Y > cadera.Y+0.15)
             {
+                caderaActualizada.Y = cadera.Y;
                 return true;
             }
             return false;
         }
-        //Método comprobación de si el usuario esta realizando una subida en el movimiento en vez de bajar.
-        public bool detectaSubida(puntosMovimiento rodillaDerecha, puntosMovimiento rodillaIzquierda)
+        public bool detectaSubida(puntosMovimiento cadera, puntosMovimiento caderaActualizada)
         {
-            if (rodillaIzquierda.Z < rodillaIzquierdaActualizada.Z + 0.1 && rodillaDerecha.Z < rodillaDerechaActualizada.Z + 0.1)
+            
+            //if (cadera.Y > caderaActualizada.Y+0.1)
+            if (caderaActualizada.Y > cadera.Y + 0.01)
             {
                 return true;
             }
             return false;
         }
         //Método comprobación de si el usuario esta bajando y actualizado la posición actual para que el usuario no suba hasta terminar el ejercicio.
-        public bool detectoBajando(puntosMovimiento cadera, puntosMovimiento rodillaIzquierda, puntosMovimiento rodillaDerecha, puntosMovimiento tobilloDerecho, puntosMovimiento tobilloIzquierdo)
+        public bool detectoBajando(puntosMovimiento cadera, puntosMovimiento caderaActualizada)
         {
             //solucionP.Content = "Inicio rodilla " + rodillaInicialDerecha.Z + "\nRodilla Derecha " + rodillaDerecha.Z;
-            if ((rodillaInicialDerecha.Z > rodillaDerecha.Z+0.1) && (rodillaInicialDerecha.Z > rodillaIzquierda.Z + 0.1))
+            if (caderaActualizada.Y > cadera.Y + 0.01)
             {
-                rodillaDerechaActualizada.Z = rodillaDerecha.Z;
-                rodillaIzquierdaActualizada.Z = rodillaIzquierda.Z;
+                caderaActualizada.Y = cadera.Y;
                 return true;
             }
             return false;
         }
+        
         //Método de detección de la postura actual.
         public bool deteccionDePostura(posturas posturaActual)
         {
@@ -580,10 +578,59 @@ namespace Microsoft.Samples.Kinect.SkeletonBasics
             Pen drawPen = this.inferredBonePen;
             if (joint0.TrackingState == JointTrackingState.Tracked && joint1.TrackingState == JointTrackingState.Tracked)
             {
-                drawPen = this.trackedBonePen;
+                if (jointType0 == JointType.HipCenter && jointType1 == JointType.HipLeft)//Compruebo Punto cadera central con cadera izquierda
+                {
+                    drawPen = cambiarColorHuesos();
+                }
+                else if (jointType0 == JointType.HipCenter && jointType1 == JointType.HipRight)//Compruebo Punto cadera central con cadera derecha
+                {
+                    drawPen = cambiarColorHuesos();
+                }
+                else if (jointType0 == JointType.HipLeft && jointType1 == JointType.KneeLeft)//Compruebo Punto cadera izquierda con rodilla izquierda
+                {
+                    drawPen = cambiarColorHuesos();
+                }
+                else if (jointType0 == JointType.HipRight && jointType1 == JointType.KneeRight)//Compruebo Punto cadera derecha con rodilla derecha
+                {
+                    drawPen = cambiarColorHuesos();
+                }
+                else if (jointType0 == JointType.KneeLeft && jointType1 == JointType.AnkleLeft)//Compruebo Punto rodilla izquierda con tobillo izquierda
+                {
+                    drawPen = cambiarColorHuesos();
+                }
+                else if (jointType0 == JointType.KneeRight && jointType1 == JointType.AnkleRight)//Compruebo Punto rodilla derecha con tobillo derecha
+                {
+                    drawPen = cambiarColorHuesos();
+                }
+                else
+                    drawPen = this.trackedBonePen;
             }
 
             drawingContext.DrawLine(drawPen, this.SkeletonPointToScreen(joint0.Position), this.SkeletonPointToScreen(joint1.Position));
+        }
+
+        public Pen cambiarColorHuesos()
+        {
+            if (posicionInicialCorrecta)
+            {
+                if (correcto)
+                {
+                    return pintaHuesosFinal;
+                }
+                else if (baja)
+                {
+                    return pintaHuesosLlegando;
+                }
+                else
+                {
+                    return pintaHuesosInicial;
+                }
+            }
+            else
+            {
+                return pintaHuesosMal;
+            }
+            
         }
 
         /// <summary>

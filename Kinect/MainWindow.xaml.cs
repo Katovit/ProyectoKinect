@@ -46,7 +46,6 @@ namespace Microsoft.Samples.Kinect.SkeletonBasics
         bool correcto = false;
         bool baja = false;
         bool error = false;
-        //puntosIniciales inicioPosturas = new puntosIniciales();
         const int numeroPostura = 10;
         int cont = 0;
         bool posicionInicialCorrecta = false;
@@ -367,7 +366,7 @@ namespace Microsoft.Samples.Kinect.SkeletonBasics
                 }
             }
         }
-
+        //Método que detecta la posición final que se le ha establecido
         public bool detectoPosicionFinal(puntosMovimiento cadera, puntosMovimiento rodillaInicialDerecha, puntosMovimiento caderaActualizada)
         {
             if(caderaInicial.Y > cadera.Y+0.15)
@@ -377,6 +376,7 @@ namespace Microsoft.Samples.Kinect.SkeletonBasics
             }
             return false;
         }
+        //Método que detecta si hay subida desde la posición de agachado
         public bool detectaSubida(puntosMovimiento cadera, puntosMovimiento caderaActualizada)
         {
             
@@ -435,7 +435,6 @@ namespace Microsoft.Samples.Kinect.SkeletonBasics
         //Método obtener puntos para almacenarlos y poderlos utilizar para calcular la postura inicial, final, intermedia o mal.
         private void obtenerPuntos(Skeleton[] skeletons)
         {
-            //bool posicioninicio = false;
             foreach (Skeleton bones in skeletons)
             {
                 if (bones.TrackingState == SkeletonTrackingState.Tracked)
@@ -580,7 +579,7 @@ namespace Microsoft.Samples.Kinect.SkeletonBasics
             {
                 if (jointType0 == JointType.HipCenter && jointType1 == JointType.HipLeft)//Compruebo Punto cadera central con cadera izquierda
                 {
-                    drawPen = cambiarColorHuesos();
+                    drawPen = cambiarColorHuesos();//Cambio color con el que pinta
                 }
                 else if (jointType0 == JointType.HipCenter && jointType1 == JointType.HipRight)//Compruebo Punto cadera central con cadera derecha
                 {
@@ -608,7 +607,7 @@ namespace Microsoft.Samples.Kinect.SkeletonBasics
 
             drawingContext.DrawLine(drawPen, this.SkeletonPointToScreen(joint0.Position), this.SkeletonPointToScreen(joint1.Position));
         }
-
+        //Método que comprueba la posición para devolver si tiene que pintar en un sitio o no.
         public Pen cambiarColorHuesos()
         {
             if (posicionInicialCorrecta)

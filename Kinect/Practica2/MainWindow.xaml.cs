@@ -24,7 +24,9 @@ namespace Microsoft.Samples.Kinect.SkeletonBasics
         Mal,
         Postura_Inicial,
         Sigue_Bajando,
-        Agachado
+        Agachado,
+        BrazosFin,
+        Sigue_Avanzando
     };
 
     /// <summary>
@@ -42,12 +44,24 @@ namespace Microsoft.Samples.Kinect.SkeletonBasics
         puntosMovimiento rodillaIzquierdaActualizada = new puntosMovimiento();
         puntosMovimiento rodillaDerechaActualizada = new puntosMovimiento();
         puntosMovimiento caderaActualizada = new puntosMovimiento();
-        puntosMovimiento codoInicialDerecho, codoInicialIzquierdo, muniecaInicialDerecha, muniecaInicialIzquierda, hombroInicialDerecho, hombroInicialIzquierdo = new puntosMovimiento();
+        puntosMovimiento codoInicialDerecho = new puntosMovimiento();
+        puntosMovimiento codoInicialIzquierdo = new puntosMovimiento(); 
+        puntosMovimiento muniecaInicialDerecha = new puntosMovimiento(); 
+        puntosMovimiento muniecaInicialIzquierda = new puntosMovimiento();
+        puntosMovimiento hombroInicialDerecho = new puntosMovimiento(); 
+        puntosMovimiento hombroInicialIzquierdo = new puntosMovimiento();
         //Variable para saber si ha finalizado el movimiento.
-        bool finalizado = false;
+        bool finalizado= false;
         bool correcto = false;
         bool baja = false;
         bool error = false;
+        bool brazosFinalizado = false;
+        bool correctoBrazo = false;
+        bool atrasBrazo = false;
+
+        /*bool correcto = false;
+        bool baja = false;
+        bool error = false;*/
         const int numeroPostura = 10;
         int cont = 0;
         bool posicionInicialCorrecta = false;
@@ -59,6 +73,8 @@ namespace Microsoft.Samples.Kinect.SkeletonBasics
         posturas posturaBien = posturas.Agachado;
         posturas posturaDetectada = posturas.Postura_Inicial;
         posturas posturaVuelta = posturas.Mal;
+        posturas posturaTerminada = posturas.BrazosFin;
+        posturas posturaAvanzando = posturas.Sigue_Avanzando;
         
         //Variables para la camara de color y profundidad.
         //Información obtenida del ejemplo de kinect color Basic.
@@ -437,14 +453,21 @@ namespace Microsoft.Samples.Kinect.SkeletonBasics
                 {
                     if (detectoBrazosFinal(codoDerecho, codoIzquierdo, muniecaDerecha, muniecaIzquierda, hombroDerecho, hombroIzquierdo))
                     {
-
+                        brazosFinalizado = true;//Guardo que ha finalizado.
+                        solucionP.Content = posturaTerminada.ToString();
+                        correctoBrazo = true;
+                        atrasBrazo = false;
                     }
                     else if (detectoBrazosAvanzando(codoDerecho, codoIzquierdo, muniecaDerecha, muniecaIzquierda, hombroDerecho, hombroIzquierdo))
                     {
-
+                        solucionP.Content = posturaAvanzando.ToString();
+                        atrasBrazo = true;
+                        correctoBrazo = false;
                     }
-                    else if (detectoBrazosDetras())
+                    else if (detectoBrazosDetras() && !brazosFinalizado)
                     {
+                        solucionP.Content = "Vuelva a Empezar";//Mensaje por pantalla para que el usuario no suba.
+                        brazosRectos = false;
                     }
                 }
                 /*else if (deteccionDePostura(posturas.Mal))
@@ -769,13 +792,37 @@ namespace Microsoft.Samples.Kinect.SkeletonBasics
                 {
                     drawPen = cambiarColorHuesos();
                 }
-                else if (jointType0 == JointType.KneeLeft && jointType1 == JointType.AnkleLeft)//Compruebo Punto rodilla izquierda con tobillo izquierda
+                else if (jointType0 == JointType.KneeLeft && jointType1 == JointType.AnkleLeft)//Compruebo Punto rodilla izquierda con tobillo izquierdo
                 {
                     drawPen = cambiarColorHuesos();
                 }
-                else if (jointType0 == JointType.KneeRight && jointType1 == JointType.AnkleRight)//Compruebo Punto rodilla derecha con tobillo derecha
+                else if (jointType0 == JointType.KneeRight && jointType1 == JointType.AnkleRight)//Compruebo Punto rodilla derecha con tobillo derecho
                 {
                     drawPen = cambiarColorHuesos();
+                }
+                else if (jointType0 == JointType.ShoulderRight && jointType1 == JointType.ElbowRight)//Compruebo hombro derecho con codo derecho
+                {
+                    drawPen = cambiarColorHuesosBrazos();
+                }
+                else if (jointType0 == JointType.ShoulderLeft && jointType1 == JointType.ElbowLeft)//Compruebo hombro izquierdo con codo izquierdo
+                {
+                    drawPen = cambiarColorHuesosBrazos();
+                }
+                else if (jointType0 == JointType.ElbowRight && jointType1 == JointType.WristRight)//Compruebo codo derecho con muñeca derecha
+                {
+                    drawPen = cambiarColorHuesosBrazos();
+                }
+                else if (jointType0 == JointType.ElbowLeft && jointType1 == JointType.WristLeft)//Compruebo codo izquierdo con muñeca izquierda
+                {
+                    drawPen = cambiarColorHuesosBrazos();
+                }
+                else if (jointType0 == JointType.WristRight && jointType1 == JointType.HandRight)//Compruebo muñeca derecha con mano derecha
+                {
+                    drawPen = cambiarColorHuesosBrazos();
+                }
+                else if (jointType0 == JointType.WristLeft && jointType1 == JointType.HandLeft)//Compruebo muñeca izquierda con mano izquierda
+                {
+                    drawPen = cambiarColorHuesosBrazos();
                 }
                 else
                     drawPen = this.trackedBonePen;
@@ -806,6 +853,29 @@ namespace Microsoft.Samples.Kinect.SkeletonBasics
                 return pintaHuesosMal;
             }
             
+        }
+        public Pen cambiarColorHuesosBrazos()
+        {
+            if (brazosRectos)
+            {
+                if (correctoBrazo)
+                {
+                    return pintaHuesosFinal;
+                }
+                else if (atrasBrazo)
+                {
+                    return pintaHuesosLlegando;
+                }
+                else
+                {
+                    return pintaHuesosInicial;
+                }
+            }
+            else
+            {
+                return pintaHuesosMal;
+            }
+
         }
         
 

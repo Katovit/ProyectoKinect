@@ -9,6 +9,7 @@ namespace Microsoft.Samples.Kinect.SkeletonBasics
     using System.IO;
     using System.Windows;
     using System.Windows.Media;
+    using System.Windows.Media.Imaging;
     using Microsoft.Kinect;
 
     public struct puntosMovimiento
@@ -32,7 +33,7 @@ namespace Microsoft.Samples.Kinect.SkeletonBasics
     public partial class MainWindow : Window
     {
         //Variables donde almaceno toda la información requerida para calcular las posiciones necesarias.
-        puntosMovimiento cadera, rodillaIzquierda, rodillaDerecha, tobilloIzquierdo, tobilloDerecho;
+        puntosMovimiento cadera, rodillaIzquierda, rodillaDerecha, tobilloIzquierdo, tobilloDerecho, codoDerecho, codoIzquierdo, muniecaDerecha, muniecaIzquierda, hombroDerecho, hombroIzquierdo;
         puntosMovimiento rodillaInicialDerecha = new puntosMovimiento();
         puntosMovimiento rodillaInicialIzquierda = new puntosMovimiento();
         puntosMovimiento caderaInicial = new puntosMovimiento();
@@ -41,6 +42,7 @@ namespace Microsoft.Samples.Kinect.SkeletonBasics
         puntosMovimiento rodillaIzquierdaActualizada = new puntosMovimiento();
         puntosMovimiento rodillaDerechaActualizada = new puntosMovimiento();
         puntosMovimiento caderaActualizada = new puntosMovimiento();
+        puntosMovimiento codoInicialDerecho, codoInicialIzquierdo, muniecaInicialDerecha, muniecaInicialIzquierda, hombroInicialDerecho, hombroInicialIzquierdo = new puntosMovimiento();
         //Variable para saber si ha finalizado el movimiento.
         bool finalizado = false;
         bool correcto = false;
@@ -49,6 +51,7 @@ namespace Microsoft.Samples.Kinect.SkeletonBasics
         const int numeroPostura = 10;
         int cont = 0;
         bool posicionInicialCorrecta = false;
+        bool brazosRectos = false;
 
         //Obtención si la postura es correcta o incorrecta.
         posturas posturaInicial = posturas.Mal;
@@ -57,6 +60,11 @@ namespace Microsoft.Samples.Kinect.SkeletonBasics
         posturas posturaDetectada = posturas.Postura_Inicial;
         posturas posturaVuelta = posturas.Mal;
         
+        //Variables para la camara de color y profundidad.
+        //Información obtenida del ejemplo de kinect color Basic.
+
+        private WriteableBitmap colorBitmap;
+        private byte[] colorPixels;
 
         /// <summary>
         /// Width of output drawing
@@ -101,7 +109,7 @@ namespace Microsoft.Samples.Kinect.SkeletonBasics
         /// <summary>
         /// Pen used for drawing bones that are currently tracked
         /// </summary>
-        private readonly Pen trackedBonePen = new Pen(Brushes.Green, 6);
+        private readonly Pen trackedBonePen = new Pen(Brushes.BlueViolet, 6);
 
 
         //Pinta en color Chocolate si esta en posicion Inicial.
@@ -213,6 +221,13 @@ namespace Microsoft.Samples.Kinect.SkeletonBasics
 
             if (null != this.sensor)
             {
+                //Inicio sensor camara de color y profundidad.
+                this.sensor.ColorStream.Enable(ColorImageFormat.RgbResolution640x480Fps30);
+                this.colorPixels = new byte[this.sensor.ColorStream.FramePixelDataLength];
+                this.colorBitmap = new WriteableBitmap(this.sensor.ColorStream.FrameWidth, this.sensor.ColorStream.FrameHeight, 96.0, 96.0, PixelFormats.Bgr32, null);
+                this.ColorImage.Source = this.colorBitmap;
+                this.sensor.ColorFrameReady += this.SensorColorFrameReady;
+
                 // Turn on the skeleton stream to receive skeleton frames
                 this.sensor.SkeletonStream.Enable();
 
@@ -248,7 +263,24 @@ namespace Microsoft.Samples.Kinect.SkeletonBasics
                 this.sensor.Stop();
             }
         }
-
+        /// <summary>
+        /// Event handler for Kinect sensor's ColorFrameReady event
+        /// </summary>
+        /// <param name="sender">object sending the event</param>
+        /// <param name="e">event arguments</param>
+        private void SensorColorFrameReady(object sender, ColorImageFrameReadyEventArgs e)
+        {
+            using (ColorImageFrame colorFrame = e.OpenColorImageFrame())
+            {
+                if (colorFrame != null)
+                {
+                    // Copy the pixel data from the image to a temporary array
+                    colorFrame.CopyPixelDataTo(this.colorPixels);
+                    // Write the pixel data into our bitmap
+                    this.colorBitmap.WritePixels(new Int32Rect(0, 0, this.colorBitmap.PixelWidth, this.colorBitmap.PixelHeight),this.colorPixels,this.colorBitmap.PixelWidth * sizeof(int),0);
+                }
+            }
+        }
         /// <summary>
         /// Event handler for Kinect sensor's SkeletonFrameReady event
         /// </summary>
@@ -301,11 +333,11 @@ namespace Microsoft.Samples.Kinect.SkeletonBasics
             
         }
         //Compruebo si es un la postura correcta.
-        private void posturaCorrecta(puntosMovimiento cadera, puntosMovimiento rodillaIzquierda, puntosMovimiento rodillaDerecha, puntosMovimiento tobilloDerecho, puntosMovimiento tobilloIzquierdo)
+        private void posturaCorrecta(puntosMovimiento cadera, puntosMovimiento rodillaIzquierda, puntosMovimiento rodillaDerecha, puntosMovimiento tobilloDerecho, puntosMovimiento tobilloIzquierdo, puntosMovimiento codoDerecho, puntosMovimiento codoIzquierdo, puntosMovimiento muniecaDerecha, puntosMovimiento muniecaIzquierda, puntosMovimiento hombroDerecho, puntosMovimiento hombroIzquierdo)
         {
             //Compruebo la postura inicial es con las piernas rectas.
             //Si entro en este primer If, lo que ontengo es que el usuario esta en la posición correcta y almacenado de referencia esa postura.
-            if (detectoRecto(cadera, rodillaIzquierda, rodillaDerecha, tobilloDerecho, tobilloIzquierdo))
+            if (detectoRecto(cadera, rodillaIzquierda, rodillaDerecha, tobilloDerecho, tobilloIzquierdo, codoDerecho, codoIzquierdo, muniecaDerecha, muniecaIzquierda, hombroDerecho, hombroIzquierdo))
             {
                 if (deteccionDePostura(posturas.Postura_Inicial))
                 {
@@ -331,7 +363,7 @@ namespace Microsoft.Samples.Kinect.SkeletonBasics
                     //Guardo el tobillo izquierdo en la posición correcta.
                     tobillaInicialIzquierdo.X = tobilloIzquierdo.X;
                     tobillaInicialIzquierdo.Y = tobilloIzquierdo.Y;
-                    tobillaInicialIzquierdo.Z = tobilloIzquierdo.Z;    
+                    tobillaInicialIzquierdo.Z = tobilloIzquierdo.Z;
                 }
             }//Si ya esta almacenada la posicion correcta o esta mal entra aqui.
             else
@@ -344,6 +376,7 @@ namespace Microsoft.Samples.Kinect.SkeletonBasics
                         solucionP.Content = posturaBien.ToString();
                         correcto = true;
                         baja = false;
+                        movimientosBrazos(codoDerecho, codoIzquierdo, muniecaDerecha, muniecaIzquierda, hombroDerecho, hombroIzquierdo);
                     }
                     else if (detectoBajando(cadera, caderaActualizada) && !finalizado)//Compruebo que no se esta bajando y no ha llegado a la posición final.
                     {
@@ -365,6 +398,107 @@ namespace Microsoft.Samples.Kinect.SkeletonBasics
                     correcto = false;
                 }
             }
+        }
+        //Metodo para comprobar que realiza el movimiento de los brazos establecido
+
+        public void movimientosBrazos(puntosMovimiento codoDerecho, puntosMovimiento codoIzquierdo, puntosMovimiento muniecaDerecha, puntosMovimiento muniecaIzquierda, puntosMovimiento hombroDerecho, puntosMovimiento hombroIzquierdo)
+        {
+            if (detectoBrazosRectos(codoDerecho, codoIzquierdo, muniecaDerecha, muniecaIzquierda, hombroDerecho, hombroIzquierdo))
+            {
+                //Guardo codo derecho en la posición correcta.
+                codoInicialDerecho.X = codoDerecho.X;
+                codoInicialDerecho.Y = codoDerecho.Y;
+                codoInicialDerecho.Z = codoDerecho.Z;
+                //Guardo codo izquierdo en la posición correcta.
+                codoInicialIzquierdo.X = codoIzquierdo.X;
+                codoInicialIzquierdo.Y = codoIzquierdo.Y;
+                codoInicialIzquierdo.Z = codoIzquierdo.Z;
+                //Guardo muñeca derecha en la posición correcta.
+                muniecaInicialDerecha.X = muniecaDerecha.X;
+                muniecaInicialDerecha.Y = muniecaDerecha.Y;
+                muniecaInicialDerecha.Z = muniecaDerecha.Z;
+                //Guardo muñeca izquierdo en la posición correcta.
+                muniecaInicialIzquierda.X = muniecaIzquierda.X;
+                muniecaInicialIzquierda.Y = muniecaIzquierda.Y;
+                muniecaInicialIzquierda.Z = muniecaIzquierda.Z;
+                //Guardo hombro derecho en la posición correcta.
+                hombroInicialDerecho.X = hombroDerecho.X;
+                hombroInicialDerecho.Y = hombroDerecho.Y;
+                hombroInicialDerecho.Z = hombroDerecho.Z;
+                //Guardo hombro izquierdo en la posición correcta.
+                hombroInicialIzquierdo.X = hombroIzquierdo.X;
+                hombroInicialIzquierdo.Y = hombroIzquierdo.Y;
+                hombroInicialIzquierdo.Z = hombroIzquierdo.Z;
+                brazosRectos = true;
+            }
+            else
+            {
+                if (brazosRectos)
+                {
+                    if (detectoBrazosFinal(codoDerecho, codoIzquierdo, muniecaDerecha, muniecaIzquierda, hombroDerecho, hombroIzquierdo))
+                    {
+
+                    }
+                    else if (detectoBrazosAvanzando(codoDerecho, codoIzquierdo, muniecaDerecha, muniecaIzquierda, hombroDerecho, hombroIzquierdo))
+                    {
+
+                    }
+                    else if (detectoBrazosDetras())
+                    {
+                    }
+                }
+                /*else if (deteccionDePostura(posturas.Mal))
+                {
+                    solucionP.Content = "Coloquese en la posición de inicio";
+                    //brazos = false;
+                    //correcto = false;
+                }*/
+            }
+
+        }
+        public bool detectoBrazosFinal( puntosMovimiento codoDerecho, puntosMovimiento codoIzquierdo, puntosMovimiento muniecaDerecha, puntosMovimiento muniecaIzquierda, puntosMovimiento hombroDerecho, puntosMovimiento hombroIzquierdo)
+        {
+            if (codoDerecho.Z < hombroDerecho.Z - 0.22 && muniecaDerecha.Z < hombroDerecho.Z - 0.22)
+            {
+                if (codoIzquierdo.Z < hombroIzquierdo.Z - 0.22 && muniecaIzquierda.Z < hombroIzquierdo.Z - 0.22)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+        public bool detectoBrazosAvanzando(puntosMovimiento codoDerecho, puntosMovimiento codoIzquierdo, puntosMovimiento muniecaDerecha, puntosMovimiento muniecaIzquierda, puntosMovimiento hombroDerecho, puntosMovimiento hombroIzquierdo)
+        {
+            if (codoDerecho.Z < hombroDerecho.Z - 0.04 && muniecaDerecha.Z < hombroDerecho.Z - 0.04)
+            {
+                if (codoIzquierdo.Z < hombroIzquierdo.Z - 0.04 && muniecaIzquierda.Z < hombroIzquierdo.Z - 0.04)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+        public bool detectoBrazosDetras()
+        {
+            return false;
+        }
+
+        public bool detectoBrazosRectos(puntosMovimiento codoDerecho, puntosMovimiento codoIzquierdo, puntosMovimiento muniecaDerecha, puntosMovimiento muniecaIzquierda, puntosMovimiento hombroDerecho, puntosMovimiento hombroIzquierdo)
+        {
+            if (codoDerecho.Y < hombroDerecho.Y + 0.03 && codoDerecho.Y > hombroDerecho.Y - 0.03 &&
+                   muniecaDerecha.Y < hombroDerecho.Y + 0.05 && muniecaDerecha.Y > hombroDerecho.Y - 0.05
+                   && codoDerecho.Z < hombroDerecho.Z + 0.03 && codoDerecho.Z > hombroDerecho.Z - 0.1 &&
+                   muniecaDerecha.Z < hombroDerecho.Z + 0.03 && muniecaDerecha.Z > hombroDerecho.Z - 0.15)
+            {
+                if (codoIzquierdo.Y < hombroIzquierdo.Y + 0.03 && codoIzquierdo.Y > hombroIzquierdo.Y - 0.03 &&
+                muniecaIzquierda.Y < hombroIzquierdo.Y + 0.05 && muniecaIzquierda.Y > hombroIzquierdo.Y - 0.05
+                && codoIzquierdo.Z < hombroIzquierdo.Z + 0.03 && codoIzquierdo.Z > hombroIzquierdo.Z - 0.1 &&
+                muniecaIzquierda.Z < hombroIzquierdo.Z + 0.03 && muniecaIzquierda.Z > hombroIzquierdo.Z - 0.15)
+                {
+                    return true;
+                }
+            }
+            return false;
         }
         //Método que detecta la posición final que se le ha establecido
         public bool detectoPosicionFinal(puntosMovimiento cadera, puntosMovimiento rodillaInicialDerecha, puntosMovimiento caderaActualizada)
@@ -424,11 +558,23 @@ namespace Microsoft.Samples.Kinect.SkeletonBasics
             return false;
         }
         //Método que comprueba si se parte de la posición donde el usuario este completamente recto, es decir con una abertura de unos 10 cm entre los dos pies.
-        bool detectoRecto(puntosMovimiento cadera, puntosMovimiento rodillaIzquierda, puntosMovimiento rodillaDerecha, puntosMovimiento tobilloIzquierdo, puntosMovimiento tobilloDerecho)
+        /*bool detectoRecto(puntosMovimiento cadera, puntosMovimiento rodillaIzquierda, puntosMovimiento rodillaDerecha, puntosMovimiento tobilloIzquierdo, puntosMovimiento tobilloDerecho)
         {
             if ((rodillaIzquierda.Z - tobilloIzquierdo.Z) - (cadera.Z - rodillaIzquierda.Z) > 0.01f && (rodillaDerecha.Z - tobilloDerecho.Z) - (cadera.Z - rodillaDerecha.Z) > 0.01f)
             {
                 return true;
+            }
+            return false;
+        }*/
+        bool detectoRecto(puntosMovimiento cadera, puntosMovimiento rodillaIzquierda, puntosMovimiento rodillaDerecha, puntosMovimiento tobilloIzquierdo, puntosMovimiento tobilloDerecho, puntosMovimiento codoDerecho, puntosMovimiento codoIzquierdo, puntosMovimiento muniecaDerecha, puntosMovimiento muniecaIzquierda, puntosMovimiento hombroDerecho, puntosMovimiento hombroIzquierdo)
+        {
+            if ((rodillaIzquierda.Z - tobilloIzquierdo.Z) - (cadera.Z - rodillaIzquierda.Z) > 0.01f && (rodillaDerecha.Z - tobilloDerecho.Z) - (cadera.Z - rodillaDerecha.Z) > 0.01f)
+            {
+                if (detectoBrazosRectos(codoDerecho, codoIzquierdo, muniecaDerecha, muniecaIzquierda, hombroDerecho, hombroIzquierdo))
+               {
+                   return true;
+               }
+               
             }
             return false;
         }
@@ -444,7 +590,6 @@ namespace Microsoft.Samples.Kinect.SkeletonBasics
                     cadera.X = bones.Joints[JointType.HipCenter].Position.X;
                     cadera.Y = bones.Joints[JointType.HipCenter].Position.Y;
                     cadera.Z = bones.Joints[JointType.HipCenter].Position.Z;
-                    
                     
                     //Puntos de la rodilla izquierda.
                     rodillaIzquierda = new puntosMovimiento();
@@ -469,10 +614,41 @@ namespace Microsoft.Samples.Kinect.SkeletonBasics
                     tobilloDerecho.X = bones.Joints[JointType.AnkleRight].Position.X;
                     tobilloDerecho.Y = bones.Joints[JointType.AnkleRight].Position.Y;
                     tobilloDerecho.Z = bones.Joints[JointType.AnkleRight].Position.Z;
+                    //Puntos del codo derecho
+                    codoDerecho = new puntosMovimiento();
+                    codoDerecho.X = bones.Joints[JointType.ElbowRight].Position.X;
+                    codoDerecho.Y = bones.Joints[JointType.ElbowRight].Position.Y;
+                    codoDerecho.Z = bones.Joints[JointType.ElbowRight].Position.Z;
+                    //Puntos del codo izquierdo
+                    codoIzquierdo = new puntosMovimiento();
+                    codoIzquierdo.X = bones.Joints[JointType.ElbowLeft].Position.X;
+                    codoIzquierdo.Y = bones.Joints[JointType.ElbowLeft].Position.Y;
+                    codoIzquierdo.Z = bones.Joints[JointType.ElbowLeft].Position.Z;
+                    //Puntos de la muñeca derecha
+                    muniecaDerecha = new puntosMovimiento();
+                    muniecaDerecha.X = bones.Joints[JointType.WristRight].Position.X;
+                    muniecaDerecha.Y = bones.Joints[JointType.WristRight].Position.Y;
+                    muniecaDerecha.Z = bones.Joints[JointType.WristRight].Position.Z;
+                    //Puntos de la muñeca izquierdo
+                    muniecaIzquierda = new puntosMovimiento();
+                    muniecaIzquierda.X = bones.Joints[JointType.WristLeft].Position.X;
+                    muniecaIzquierda.Y = bones.Joints[JointType.WristLeft].Position.Y;
+                    muniecaIzquierda.Z = bones.Joints[JointType.WristLeft].Position.Z;
+                    //Puntos del hombro derecho
+                    hombroDerecho = new puntosMovimiento();
+                    hombroDerecho.X = bones.Joints[JointType.ShoulderRight].Position.X;
+                    hombroDerecho.Y = bones.Joints[JointType.ShoulderRight].Position.Y;
+                    hombroDerecho.Z = bones.Joints[JointType.ShoulderRight].Position.Z;
+                    //Puntos del hombro izquierdo
+                    hombroIzquierdo = new puntosMovimiento();
+                    hombroIzquierdo.X = bones.Joints[JointType.ShoulderLeft].Position.X;
+                    hombroIzquierdo.Y = bones.Joints[JointType.ShoulderLeft].Position.Y;
+                    hombroIzquierdo.Z = bones.Joints[JointType.ShoulderLeft].Position.Z;
+
                     
                 }
             }
-            posturaCorrecta(cadera, rodillaIzquierda, rodillaDerecha, tobilloIzquierdo, tobilloDerecho);
+            posturaCorrecta(cadera, rodillaIzquierda, rodillaDerecha, tobilloIzquierdo, tobilloDerecho, codoDerecho, codoIzquierdo, muniecaDerecha, muniecaIzquierda, hombroDerecho, hombroIzquierdo);
         }
 
         /// <summary>
@@ -631,6 +807,7 @@ namespace Microsoft.Samples.Kinect.SkeletonBasics
             }
             
         }
+        
 
         /// <summary>
         /// Handles the checking or unchecking of the seated mode combo box

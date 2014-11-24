@@ -318,7 +318,7 @@ namespace Microsoft.Samples.Kinect.SkeletonBasics
             using (DrawingContext dc = this.drawingGroup.Open())
             {
                 // Draw a transparent background to set the render size
-                dc.DrawRectangle(Brushes.Black, null, new Rect(0.0, 0.0, RenderWidth, RenderHeight));
+                dc.DrawRectangle(Brushes.Transparent, null, new Rect(0.0, 0.0, RenderWidth, RenderHeight));
 
                 if (skeletons.Length != 0)
                 {
@@ -359,10 +359,10 @@ namespace Microsoft.Samples.Kinect.SkeletonBasics
                 {
                     finalizado = false;
                     solucionP.Content = posturaInicial.ToString();
-                    posicionInicialCorrecta = true;
                     //Guardo las cadera en la posicion correcta.         
                     caderaInicial.X = cadera.X;
-                    caderaActualizada.Y = caderaInicial.Y = cadera.Y;
+                    caderaActualizada.Y = cadera.Y;
+                    caderaInicial.Y = cadera.Y;
                     caderaInicial.Z = cadera.Z;
                     //Guardo la rodilla derecha en la posicion correcta
                     rodillaInicialDerecha.X = rodillaDerecha.X;
@@ -396,15 +396,18 @@ namespace Microsoft.Samples.Kinect.SkeletonBasics
                     }
                     else if (detectoBajando(cadera, caderaActualizada) && !finalizado)//Compruebo que no se esta bajando y no ha llegado a la posición final.
                     {
+                        //caderaActualizada.Y = cadera.Y;
                         solucionP.Content = posturaBajando.ToString();
                         baja = true;
                         correcto = false;
                     }
-                    else if(detectaSubida(cadera, caderaActualizada))//Compruebo que el usuario no suba de la posicion inicial que hemos guardado anteriormente.
+                    else if (detectaSubida(cadera, caderaActualizada))//Compruebo que el usuario no suba de la posicion inicial que hemos guardado anteriormente.
                     {
                         solucionP.Content = "Vuelva a Empezar";//Mensaje por pantalla para que el usuario no suba.
                         posicionInicialCorrecta = false;
-                        
+                        brazosRectos = false;
+                        baja = false;
+
                     }
                 }
                 else if (deteccionDePostura(posturas.Mal))
@@ -412,116 +415,9 @@ namespace Microsoft.Samples.Kinect.SkeletonBasics
                     solucionP.Content = "Coloquese en la posición de inicio";
                     baja = false;
                     correcto = false;
+                    brazosRectos = false;
                 }
             }
-        }
-        //Metodo para comprobar que realiza el movimiento de los brazos establecido
-
-        public void movimientosBrazos(puntosMovimiento codoDerecho, puntosMovimiento codoIzquierdo, puntosMovimiento muniecaDerecha, puntosMovimiento muniecaIzquierda, puntosMovimiento hombroDerecho, puntosMovimiento hombroIzquierdo)
-        {
-            if (detectoBrazosRectos(codoDerecho, codoIzquierdo, muniecaDerecha, muniecaIzquierda, hombroDerecho, hombroIzquierdo))
-            {
-                //Guardo codo derecho en la posición correcta.
-                codoInicialDerecho.X = codoDerecho.X;
-                codoInicialDerecho.Y = codoDerecho.Y;
-                codoInicialDerecho.Z = codoDerecho.Z;
-                //Guardo codo izquierdo en la posición correcta.
-                codoInicialIzquierdo.X = codoIzquierdo.X;
-                codoInicialIzquierdo.Y = codoIzquierdo.Y;
-                codoInicialIzquierdo.Z = codoIzquierdo.Z;
-                //Guardo muñeca derecha en la posición correcta.
-                muniecaInicialDerecha.X = muniecaDerecha.X;
-                muniecaInicialDerecha.Y = muniecaDerecha.Y;
-                muniecaInicialDerecha.Z = muniecaDerecha.Z;
-                //Guardo muñeca izquierdo en la posición correcta.
-                muniecaInicialIzquierda.X = muniecaIzquierda.X;
-                muniecaInicialIzquierda.Y = muniecaIzquierda.Y;
-                muniecaInicialIzquierda.Z = muniecaIzquierda.Z;
-                //Guardo hombro derecho en la posición correcta.
-                hombroInicialDerecho.X = hombroDerecho.X;
-                hombroInicialDerecho.Y = hombroDerecho.Y;
-                hombroInicialDerecho.Z = hombroDerecho.Z;
-                //Guardo hombro izquierdo en la posición correcta.
-                hombroInicialIzquierdo.X = hombroIzquierdo.X;
-                hombroInicialIzquierdo.Y = hombroIzquierdo.Y;
-                hombroInicialIzquierdo.Z = hombroIzquierdo.Z;
-                brazosRectos = true;
-            }
-            else
-            {
-                if (brazosRectos)
-                {
-                    if (detectoBrazosFinal(codoDerecho, codoIzquierdo, muniecaDerecha, muniecaIzquierda, hombroDerecho, hombroIzquierdo))
-                    {
-                        brazosFinalizado = true;//Guardo que ha finalizado.
-                        solucionP.Content = posturaTerminada.ToString();
-                        correctoBrazo = true;
-                        atrasBrazo = false;
-                    }
-                    else if (detectoBrazosAvanzando(codoDerecho, codoIzquierdo, muniecaDerecha, muniecaIzquierda, hombroDerecho, hombroIzquierdo))
-                    {
-                        solucionP.Content = posturaAvanzando.ToString();
-                        atrasBrazo = true;
-                        correctoBrazo = false;
-                    }
-                    else if (detectoBrazosDetras() && !brazosFinalizado)
-                    {
-                        solucionP.Content = "Vuelva a Empezar";//Mensaje por pantalla para que el usuario no suba.
-                        brazosRectos = false;
-                    }
-                }
-                /*else if (deteccionDePostura(posturas.Mal))
-                {
-                    solucionP.Content = "Coloquese en la posición de inicio";
-                    //brazos = false;
-                    //correcto = false;
-                }*/
-            }
-
-        }
-        public bool detectoBrazosFinal( puntosMovimiento codoDerecho, puntosMovimiento codoIzquierdo, puntosMovimiento muniecaDerecha, puntosMovimiento muniecaIzquierda, puntosMovimiento hombroDerecho, puntosMovimiento hombroIzquierdo)
-        {
-            if (codoDerecho.Z < hombroDerecho.Z - 0.22 && muniecaDerecha.Z < hombroDerecho.Z - 0.22)
-            {
-                if (codoIzquierdo.Z < hombroIzquierdo.Z - 0.22 && muniecaIzquierda.Z < hombroIzquierdo.Z - 0.22)
-                {
-                    return true;
-                }
-            }
-            return false;
-        }
-        public bool detectoBrazosAvanzando(puntosMovimiento codoDerecho, puntosMovimiento codoIzquierdo, puntosMovimiento muniecaDerecha, puntosMovimiento muniecaIzquierda, puntosMovimiento hombroDerecho, puntosMovimiento hombroIzquierdo)
-        {
-            if (codoDerecho.Z < hombroDerecho.Z - 0.04 && muniecaDerecha.Z < hombroDerecho.Z - 0.04)
-            {
-                if (codoIzquierdo.Z < hombroIzquierdo.Z - 0.04 && muniecaIzquierda.Z < hombroIzquierdo.Z - 0.04)
-                {
-                    return true;
-                }
-            }
-            return false;
-        }
-        public bool detectoBrazosDetras()
-        {
-            return false;
-        }
-
-        public bool detectoBrazosRectos(puntosMovimiento codoDerecho, puntosMovimiento codoIzquierdo, puntosMovimiento muniecaDerecha, puntosMovimiento muniecaIzquierda, puntosMovimiento hombroDerecho, puntosMovimiento hombroIzquierdo)
-        {
-            if (codoDerecho.Y < hombroDerecho.Y + 0.03 && codoDerecho.Y > hombroDerecho.Y - 0.03 &&
-                   muniecaDerecha.Y < hombroDerecho.Y + 0.05 && muniecaDerecha.Y > hombroDerecho.Y - 0.05
-                   && codoDerecho.Z < hombroDerecho.Z + 0.03 && codoDerecho.Z > hombroDerecho.Z - 0.1 &&
-                   muniecaDerecha.Z < hombroDerecho.Z + 0.03 && muniecaDerecha.Z > hombroDerecho.Z - 0.15)
-            {
-                if (codoIzquierdo.Y < hombroIzquierdo.Y + 0.03 && codoIzquierdo.Y > hombroIzquierdo.Y - 0.03 &&
-                muniecaIzquierda.Y < hombroIzquierdo.Y + 0.05 && muniecaIzquierda.Y > hombroIzquierdo.Y - 0.05
-                && codoIzquierdo.Z < hombroIzquierdo.Z + 0.03 && codoIzquierdo.Z > hombroIzquierdo.Z - 0.1 &&
-                muniecaIzquierda.Z < hombroIzquierdo.Z + 0.03 && muniecaIzquierda.Z > hombroIzquierdo.Z - 0.15)
-                {
-                    return true;
-                }
-            }
-            return false;
         }
         //Método que detecta la posición final que se le ha establecido
         public bool detectoPosicionFinal(puntosMovimiento cadera, puntosMovimiento rodillaInicialDerecha, puntosMovimiento caderaActualizada)
@@ -538,8 +434,10 @@ namespace Microsoft.Samples.Kinect.SkeletonBasics
         {
             
             //if (cadera.Y > caderaActualizada.Y+0.1)
-            if (caderaActualizada.Y > cadera.Y + 0.01)
+            //if (caderaActualizada.Y > cadera.Y - 0.01 )
+            if(cadera.Y-0.01 > caderaActualizada.Y)
             {
+                //caderaActualizada.Y = cadera.Y;
                 return true;
             }
             return false;
@@ -550,7 +448,7 @@ namespace Microsoft.Samples.Kinect.SkeletonBasics
             //solucionP.Content = "Inicio rodilla " + rodillaInicialDerecha.Z + "\nRodilla Derecha " + rodillaDerecha.Z;
             if (caderaActualizada.Y > cadera.Y + 0.01)
             {
-                caderaActualizada.Y = cadera.Y;
+                caderaActualizada.Y = cadera.Y-0.01f;
                 return true;
             }
             return false;
@@ -580,21 +478,108 @@ namespace Microsoft.Samples.Kinect.SkeletonBasics
                 cont = 0;
             return false;
         }
-        //Método que comprueba si se parte de la posición donde el usuario este completamente recto, es decir con una abertura de unos 10 cm entre los dos pies.
-        /*bool detectoRecto(puntosMovimiento cadera, puntosMovimiento rodillaIzquierda, puntosMovimiento rodillaDerecha, puntosMovimiento tobilloIzquierdo, puntosMovimiento tobilloDerecho)
+        //Metodo para comprobar que realiza el movimiento de los brazos establecido
+
+        public void movimientosBrazos(puntosMovimiento codoDerecho, puntosMovimiento codoIzquierdo, puntosMovimiento muniecaDerecha, puntosMovimiento muniecaIzquierda, puntosMovimiento hombroDerecho, puntosMovimiento hombroIzquierdo)
         {
-            if ((rodillaIzquierda.Z - tobilloIzquierdo.Z) - (cadera.Z - rodillaIzquierda.Z) > 0.01f && (rodillaDerecha.Z - tobilloDerecho.Z) - (cadera.Z - rodillaDerecha.Z) > 0.01f)
+            if (detectoBrazosRectos(codoDerecho, codoIzquierdo, muniecaDerecha, muniecaIzquierda, hombroDerecho, hombroIzquierdo))
             {
-                return true;
+                brazosRectos = true;
+            }
+            else
+            {
+                if (brazosRectos)
+                {
+                    if (detectoBrazosFinal(codoDerecho, codoIzquierdo, muniecaDerecha, muniecaIzquierda, hombroDerecho, hombroIzquierdo))
+                    {
+                        brazosFinalizado = true;//Guardo que ha finalizado.
+                        solucionP.Content = posturaTerminada.ToString();
+                        correctoBrazo = true;
+                        atrasBrazo = false;
+                    }
+                    else if (detectoBrazosAvanzando(codoDerecho, codoIzquierdo, muniecaDerecha, muniecaIzquierda, hombroDerecho, hombroIzquierdo))
+                    {
+                        solucionP.Content = posturaAvanzando.ToString();
+                        atrasBrazo = true;
+                        correctoBrazo = false;
+                    }
+                    else if (detectoBrazosDetras() && !brazosFinalizado)
+                    {
+                        solucionP.Content = "Vuelva a Empezar";
+                        brazosRectos = false;
+                        atrasBrazo = false;
+                    }
+                }
+                else if (deteccionDePostura(posturas.Mal))
+                {
+                    solucionP.Content = "Coloquese en la posición de inicio";
+                    correctoBrazo = false;
+                    atrasBrazo = false;
+                    brazosRectos = false;
+                }
+            }
+
+        }
+        public bool detectoBrazosFinal(puntosMovimiento codoDerecho, puntosMovimiento codoIzquierdo, puntosMovimiento muniecaDerecha, puntosMovimiento muniecaIzquierda, puntosMovimiento hombroDerecho, puntosMovimiento hombroIzquierdo)
+        {
+            if (codoDerecho.Z < hombroDerecho.Z - 0.22 && muniecaDerecha.Z < hombroDerecho.Z - 0.22)
+            {
+                if (codoIzquierdo.Z < hombroIzquierdo.Z - 0.22 && muniecaIzquierda.Z < hombroIzquierdo.Z - 0.22)
+                {
+                    return true;
+                }
             }
             return false;
-        }*/
+        }
+        public bool detectoBrazosAvanzando(puntosMovimiento codoDerecho, puntosMovimiento codoIzquierdo, puntosMovimiento muniecaDerecha, puntosMovimiento muniecaIzquierda, puntosMovimiento hombroDerecho, puntosMovimiento hombroIzquierdo)
+        {
+            if (codoDerecho.Z < hombroDerecho.Z - 0.04 && muniecaDerecha.Z < hombroDerecho.Z - 0.04)
+            {
+                if (codoIzquierdo.Z < hombroIzquierdo.Z - 0.04 && muniecaIzquierda.Z < hombroIzquierdo.Z - 0.04)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+        public bool detectoBrazosDetras()
+        {
+            if (codoDerecho.Z > hombroDerecho.Z + 0.04 && muniecaDerecha.Z > hombroDerecho.Z + 0.04)
+            {
+                if(codoIzquierdo.Z > hombroIzquierdo.Z +0.04 && muniecaIzquierda.Z > hombroIzquierdo.Z + 0.04)
+                {
+                       return true;
+                }
+            }
+            return false;
+        }
+
+        public bool detectoBrazosRectos(puntosMovimiento codoDerecho, puntosMovimiento codoIzquierdo, puntosMovimiento muniecaDerecha, puntosMovimiento muniecaIzquierda, puntosMovimiento hombroDerecho, puntosMovimiento hombroIzquierdo)
+        {
+            if (codoDerecho.Y < hombroDerecho.Y + 0.03 && codoDerecho.Y > hombroDerecho.Y - 0.03 &&
+                   muniecaDerecha.Y < hombroDerecho.Y + 0.05 && muniecaDerecha.Y > hombroDerecho.Y - 0.05
+                   && codoDerecho.Z < hombroDerecho.Z + 0.03 && codoDerecho.Z > hombroDerecho.Z - 0.1 &&
+                   muniecaDerecha.Z < hombroDerecho.Z + 0.03 && muniecaDerecha.Z > hombroDerecho.Z - 0.15)
+            {
+                if (codoIzquierdo.Y < hombroIzquierdo.Y + 0.03 && codoIzquierdo.Y > hombroIzquierdo.Y - 0.03 &&
+                muniecaIzquierda.Y < hombroIzquierdo.Y + 0.05 && muniecaIzquierda.Y > hombroIzquierdo.Y - 0.05
+                && codoIzquierdo.Z < hombroIzquierdo.Z + 0.03 && codoIzquierdo.Z > hombroIzquierdo.Z - 0.1 &&
+                muniecaIzquierda.Z < hombroIzquierdo.Z + 0.03 && muniecaIzquierda.Z > hombroIzquierdo.Z - 0.15)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+        //Método que comprueba si se parte de la posición donde el usuario este completamente recto, es decir con una abertura de unos 10 cm entre los dos pies.
         bool detectoRecto(puntosMovimiento cadera, puntosMovimiento rodillaIzquierda, puntosMovimiento rodillaDerecha, puntosMovimiento tobilloIzquierdo, puntosMovimiento tobilloDerecho, puntosMovimiento codoDerecho, puntosMovimiento codoIzquierdo, puntosMovimiento muniecaDerecha, puntosMovimiento muniecaIzquierda, puntosMovimiento hombroDerecho, puntosMovimiento hombroIzquierdo)
         {
             if ((rodillaIzquierda.Z - tobilloIzquierdo.Z) - (cadera.Z - rodillaIzquierda.Z) > 0.01f && (rodillaDerecha.Z - tobilloDerecho.Z) - (cadera.Z - rodillaDerecha.Z) > 0.01f)
             {
                 if (detectoBrazosRectos(codoDerecho, codoIzquierdo, muniecaDerecha, muniecaIzquierda, hombroDerecho, hombroIzquierdo))
                {
+                   brazosRectos = true;
+                   posicionInicialCorrecta = true;
                    return true;
                }
                

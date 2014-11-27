@@ -50,8 +50,8 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="70"/>
+            <RowDefinition Height="0"/>
         </Grid.RowDefinitions>
         <DockPanel Grid.Row="0" Margin="0 0 0 20">
             <Image DockPanel.Dock="Left" Source="Images\Logo.png" Stretch="Fill" Height="32" Width="81" Margin="0 10 0 5"/>
@@ -65,13 +65,15 @@
                 <Canvas Background="Transparent"></Canvas>          
             </Grid>
         </Viewbox>
-        <CheckBox Grid.Row="2" Style="{StaticResource SquareCheckBox}" Content="Seated Mode" Height="Auto" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0 10 10 10" Name="checkBoxSeatedMode" Checked="CheckBoxSeatedModeChanged" Unchecked="CheckBoxSeatedModeChanged"/>
+        <CheckBox Grid.Row="2" Style="{StaticResource SquareCheckBox}" Content="Seated Mode" Height="Auto" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0,40,0,6" Name="checkBoxSeatedMode" Checked="CheckBoxSeatedModeChanged" Unchecked="CheckBoxSeatedModeChanged"/>
         <StatusBar Grid.Row="3" HorizontalAlignment="Stretch" Name="statusBar" VerticalAlignment="Bottom" Background="White" Foreground="{StaticResource MediumGreyBrush}">
-            <StatusBarItem Padding="0 0 0 10">
-                <TextBlock Name="statusBarText" Margin="-1 0 0 0">Click 'Seated' to change skeletal pipeline type!</TextBlock>
-            </StatusBarItem>
+            <StatusBarItem Padding="0 0 0 10"></StatusBarItem>
         </StatusBar>
-        <Label x:Name="solucionP" Content="Inicio de movimientos" HorizontalAlignment="Right" FontSize="20" Margin="0,0,0,6" Width="479" Grid.Row="2" Grid.RowSpan="2" Height="64"></Label>
+        <Label x:Name="solucionP" Content="Inicio de movimientos" HorizontalAlignment="Right" FontSize="20" Margin="0,0,0,6" Width="425" Grid.Row="2" Height="64"></Label>
+        <Button Content="Reset" Grid.Row="2" Height="23" HorizontalAlignment="Left" Margin="12,10,0,0" Name="button1" VerticalAlignment="Top" Width="75" Click="button1_Click" />
+        <Slider Grid.Row="2" Height="23" HorizontalAlignment="Left" Margin="154,24,0,0" Name="slider1" VerticalAlignment="Top" Width="100" ValueChanged="slider1_ValueChanged" Maximum="12" Minimum="0" />
+        <TextBlock Grid.Row="2" Height="21" HorizontalAlignment="Left" Margin="168,0,0,0" Name="textBlock1" Text="Margen error" VerticalAlignment="Top" />
+        <TextBlock Grid.Row="2" Height="23" HorizontalAlignment="Left" Margin="198,40,0,0" Name="MuestraError" Text="0%" VerticalAlignment="Top" />
     </Grid>
 </Window>
 
